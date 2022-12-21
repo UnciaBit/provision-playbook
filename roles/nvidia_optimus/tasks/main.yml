@@ -37,6 +37,7 @@
     state: present
     insertafter: Option "BaseMosaic" "on"
     line: '        Option "PrimaryGPU" "yes"'
+  when: primary_gpu
 
 #- name: Enable Prime Render Offload
 #  ansible.builtin.blockinfile:

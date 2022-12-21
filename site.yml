@@ -6,4 +6,5 @@
   become_method: sudo
   roles:
     - common
-    - nvidia_optimus
+#    - nvidia_optimus
+    - system_config

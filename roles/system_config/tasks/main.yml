@@ -1,0 +1,12 @@
+---
+
+- name: Allow user to sudo without password
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    state: present
+    insertafter: EOF
+    line: "{{ user }} ALL=(ALL) NOPASSWD: ALL"
+  when: sudo_nopassword
+
+
+# zsh and Xresources and nerd fonts
