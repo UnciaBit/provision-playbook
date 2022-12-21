@@ -1,0 +1,63 @@
+---
+
+- name: Install drivers and dependencies
+  ansible.builtin.dnf:
+      name: "{{ item }}"
+      state: present
+  loop:
+    - gcc
+    - kernel-headers
+    - kernel-devel
+    - akmod-nvidia
+    - xorg-x11-drv-nvidia
+    - xorg-x11-drv-nvidia-libs
+    - xorg-x11-drv-nvidia-libs.i686
+    - xorg-x11-drv-nvidia-cuda
+    - xorg-x11-drv-nvidia-cuda-libs
+    - xrandr
+
+- name: Wait for 1 minute until the kernel loads
+  ansible.builtin.pause:
+    minutes: 1
+
+- name: Read from the updated kernel modules
+  ansible.builtin.command: akmods --force
+
+- name: Read from the updated kernel modules
+  ansible.builtin.command: dracut --force
+
+- name: Copy X11 config
+  ansible.builtin.copy:
+    src: /usr/share/X11/xorg.conf.d/nvidia.conf
+    dest: /etc/X11/xorg.conf.d/nvidia.conf
+
+- name: Enable Primary GPU
+  ansible.builtin.lineinfile:
+    path: /etc/X11/xorg.conf.d/nvidia.conf
+    state: present
+    insertafter: Option "BaseMosaic" "on"
+    line: '        Option "PrimaryGPU" "yes"'
+
+#- name: Enable Prime Render Offload
+#  ansible.builtin.blockinfile:
+#    path: /etc/modprobe.d/nvidia.conf
+#    block: |
+#      # Enable DynamicPwerManagement
+#      # http://download.nvidia.com/XFree86/Linux-x86_64/440.31/README/dynamicpowermanagement.html
+#      options nvidia NVreg_DynamicPowerManagement=0x02
+#    state: present
+
+- name: Disable copr repo
+  ansible.builtin.dnf:
+    disablerepo: copr:copr.fedorainfracloud.org:kwizart:xorg-x11-server_nvidia
+
+- name: Change default GNOME to Xorg
+  ansible.builtin.replace:
+    path: /etc/gdm/custom.conf
+    regexp: "#WaylandEnable=false"
+    replace: WaylandEnable=false
+  when: use_xorg
+
+- name: Prompt to restart computer
+  ansible.builtin.pause:
+    prompt: Please restart your computer

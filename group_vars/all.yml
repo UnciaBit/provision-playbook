@@ -1,0 +1,6 @@
+---
+
+use_xorg: true
+
+dnf_packages:
+  - python3

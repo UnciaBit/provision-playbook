@@ -1,0 +1,24 @@
+---
+
+# Install
+# bspwm
+# ansible
+# python3 and pip
+# thunderbird (inc. configration)
+
+
+# Configure
+# Disable Wayland
+# Install Nvidia proprietary drivers
+
+- name: Ensure that the system is up to date
+  ansible.builtin.dnf:
+    name: '*'
+    state: latest
+    update_cache: yes
+
+- name: Install defined packages
+  ansible.builtin.dnf:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ dnf_packages }}"
