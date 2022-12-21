@@ -26,11 +26,31 @@
       disable_gpg_check: true
   when: ansible_distribution == "Fedora"
 
-- name: Install defined packages
+- name: Install dnf packages
   ansible.builtin.dnf:
     name: "{{ item }}"
     state: present
   loop: "{{ dnf_packages }}"
+
+- name: Add Flatpack repo
+  ansible.builtin.command: flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+- name: Install snap
+  ansible.builtin.dnf:
+    name: snapd
+    state: present
+
+- name: Install Flatpak packages
+  community.general.flatpak:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ flatpak_packages }}"
+
+- name: Install snap packages
+  community.general.snap:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ snap_packages }}"
 
 - name: Install proprietary/non-packaged software
   ansible.builtin.include_tasks: proprietary.yml
