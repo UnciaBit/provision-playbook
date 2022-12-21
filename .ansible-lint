@@ -1,0 +1,9 @@
+---
+warn_list:  # or 'skip_list' to silence them completely
+    - experimental  # all rules tagged as experimental
+    - no-changed-when  # Commands should not change things if nothing needs doing.
+    - package-latest  # Package installs should not use latest.
+    - yaml[comments]  # Violations reported by yamllint.
+    - yaml[indentation]  # Violations reported by yamllint.
+    - yaml[new-line-at-end-of-file]  # Violations reported by yamllint.
+    - yaml[truthy]  # Violations reported by yamllint.
