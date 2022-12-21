@@ -1,6 +1,69 @@
 ---
 
+user: wren
+
 use_xorg: true
+sudo_nopassword: true
+primary_gpu: false
 
 dnf_packages:
   - python3
+  - arandr
+  - audacious
+  - bat
+  - lsd
+  - btop
+  - bspwm
+  - "@Development Tools"
+  - fzf
+  - git-lfs
+  - geany
+  - navi
+  - qdirstat
+  - neofetch
+  - nitrogen
+  - nnn
+  - obs-studio
+  - okular
+  - pandoc
+  - discord
+  - picard
+  - pdfarranger
+  - xcompmgr # For zoom
+  - powerline
+  - powerline-fonts
+  - power-profiles-daemon
+  - qbittorrent
+  - rofi
+  - rust
+  - cargo
+  - screenfetch
+  - texlive-scheme-full
+  - thunderbird
+  - unrar
+  - x264-devel
+  - xdotool
+  - zsh
+  - zsh-syntax-highlighting
+  - zsh-autosuggestions
+  - xev
+  - flameshot
+  - yubikey-manager
+  - yt-dlp
+  - yt-dlp-zsh-completion
+  - rxvt-unicode
+  - "@xfce-desktop-environment"
+  - google-chrome-stable
+  - ripgrep
+  - tealdeer
+  - sox
+  - mpv
+  - python3-devel
+
+flatpak_packages:
+  - com.parsecgaming.parsec
+  - org.signal.Signal
+
+snap_packages:
+  - slack
+  - zotero-snap
