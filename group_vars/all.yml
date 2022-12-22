@@ -59,9 +59,19 @@ dnf_packages:
   - sox
   - mpv
   - python3-devel
+  - ffmpeg
+  - ffmpeg-devel
+  - incron
+  - java-latest-openjdk
+  - java-latest-openjdk-devel
+  - polybar
+  - xsetroot
+  - feh
+  - libnotify
+  - dunst
+  - rclone
 
 flatpak_packages:
-  - com.parsecgaming.parsec
   - org.signal.Signal
 
 snap_packages:
