@@ -8,3 +8,5 @@
     - common
 #    - nvidia_optimus
     - system_config
+  environment:
+    PATH: "{{ lookup('ansible.builtin.env', 'PATH') }}"

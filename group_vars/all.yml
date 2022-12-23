@@ -70,9 +70,14 @@ dnf_packages:
   - libnotify
   - dunst
   - rclone
+  - blueman
+  - gtk4-devel
+  - glib2-devel
+  - nodejs
 
 flatpak_packages:
   - org.signal.Signal
+  - com.github.qarmin.czkawka
 
 snap_packages:
   - slack

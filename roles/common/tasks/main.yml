@@ -1,11 +1,5 @@
 ---
 
-# Install
-# bspwm
-# ansible
-# python3 and pip
-# thunderbird (inc. configration)
-
 - name: Ensure that the system is up to date
   ansible.builtin.dnf:
     name: '*'

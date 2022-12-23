@@ -1,0 +1,152 @@
+---
+
+- name: Create temporary working directory
+  ansible.builtin.file:
+    path: /tmp/ansible
+    state: directory
+
+# rmlint https://github.com/sahib/rmlint
+
+- name: Check if rmlint is installed
+  ansible.builtin.stat:
+    path: /usr/bin/rmlint
+  register: rmlint_installed
+
+- name: Install rmlint
+  block:
+    - name: Install dependencies
+      ansible.builtin.yum:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - scons
+        - python3-sphinx
+        - gettext
+        - json-glib-devel
+        - glib2-devel
+        - libblkid-devel
+        - elfutils-libelf-devel
+        - gtk3
+        - librsvg2
+
+    - name: Clone rmlint
+      ansible.builtin.git:
+        repo: https://github.com/sahib/rmlint.git
+        dest: /tmp/ansible/rmlint
+
+    - name: Build rmlint
+      ansible.builtin.command: scons --prefix=/usr install
+      args:
+        chdir: /tmp/ansible/rmlint
+  when: not rmlint_installed.stat.exists
+
+# dust https://github.com/bootandy/dust
+
+- name: Check if dust is installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/dust
+  register: dust_installed
+
+- name: Install dust
+  block:
+    - name: Get latest dust release
+      ansible.builtin.uri:
+        url: https://api.github.com/repos/bootandy/dust/releases/latest
+        return_content: yes
+        status_code: 200
+      register: dust_release
+
+    - name: Download linux binary
+      ansible.builtin.unarchive:
+        remote_src: yes
+        src: "{{ item.browser_download_url }}"
+        dest: /tmp/ansible
+      when: "'x86_64-unknown-linux-gnu.tar.gz' in item.name"
+      loop: "{{ dust_release.json.assets }}"
+
+    - name: Find dust directory name
+      ansible.builtin.find:
+          paths: /tmp/ansible
+          recurse: yes
+          file_type: directory
+          patterns: dust*
+      register: dust_folder
+
+    - name: Move dust to /usr/local/bin
+      ansible.builtin.copy:
+        src: "{{ dust_folder.files[0].path }}/dust"
+        dest: /usr/local/bin/dust
+        mode: 0755
+  when: dust_installed.stat.exists == False
+
+# difftastic https://github.com/Wilfred/difftastic
+
+- name: Check if brew is installed
+  ansible.builtin.stat:
+    path: /home/linuxbrew/.linuxbrew/bin/brew
+  register: brew_installed
+
+- name: Fail if brew is not installed
+  ansible.builtin.fail:
+    msg: "Brew is not installed, please install them manually"
+  when: brew_installed.stat.exists == False
+
+- name: Check if difftastic is installed
+  ansible.builtin.stat:
+      path: /home/linuxbrew/.linuxbrew/bin/difftastic
+  register: difftastic_installed
+
+- name: Install difftastic
+  community.general.homebrew:
+    name: difftastic
+    state: present
+  when: difftastic_installed.stat.exists == False
+  become: yes
+  become_user: "{{ user }}"
+
+# git-split-diffs https://github.com/banga/git-split-diffs
+
+- name: Check if git-split-diffs is installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/git-split-diffs
+  register: git_split_diffs_installed
+
+- name: Install git-split-diffs
+  ansible.builtin.command: npm install -g git-split-diffs
+  when: git_split_diffs_installed.stat.exists == False
+
+- name: Run git config
+  ansible.builtin.command: git config --global core.pager "git-split-diffs --color | less -RFX"
+
+# autorandr https://github.com/phillipberndt/autorandr
+
+- name: Check if autorandr is installed
+  ansible.builtin.stat:
+    path: /usr/bin/autorandr
+  register: autorandr_installed
+
+- name: Install autorandr
+  block:
+    - name: Clone autorandr repository
+      ansible.builtin.git:
+        repo: https://github.com/phillipberndt/autorandr.git
+        dest: /tmp/ansible/autorandr
+        version: master
+
+    - name: Install autorandr
+      ansible.builtin.command: make install
+      args:
+        chdir: /tmp/ansible/autorandr
+
+    - name: Remove autorandr repository
+      ansible.builtin.file:
+        path: /tmp/ansible/autorandr
+        state: absent
+  when: not autorandr_installed.stat.exists
+
+# End
+
+- name: Remove temporary working directory
+  ansible.builtin.file:
+    path: /tmp/ansible
+    state: absent
