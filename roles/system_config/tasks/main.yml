@@ -4,9 +4,26 @@
   ansible.builtin.lineinfile:
     path: /etc/sudoers
     state: present
-    insertafter: EOF
     line: "{{ user }} ALL=(ALL) NOPASSWD: ALL"
   when: sudo_nopassword
 
+- name: Copy pulseaudio .pa template
+  ansible.builtin.template:
+    src: pulse_default.pa.j2
+    dest: /etc/pulse/default.pa
+    owner: root
+    group: root
+    mode: 0644
 
-# zsh and Xresources and nerd fonts
+#- name: Get dotfile
+#  ansible.builtin.git:
+#      repo: https://github.com/UnciaBit/dotfiles
+#      dest: /tmp/ansible/dotfiles
+#
+#- name: Copy dotfiles
+#  ansible.builtin.copy:
+#    src: /tmp/ansible/dotfiles/
+#    dest: /home/{{ user }}/
+#    owner: "{{ user }}"
+#    group: "{{ user }}"
+#    mode: 0644
