@@ -1,0 +1,291 @@
+---
+
+# Create temporary working directory
+
+- name: Create temporary working directory
+  ansible.builtin.file:
+    path: /tmp/ansible
+    state: directory
+
+- name: Create directory for files that require user interaction
+  ansible.builtin.file:
+    path: /tmp/ansible-user-interaction
+    state: directory
+
+# Jetbrains
+- name: Check if jetbrains toolbox is installed
+  ansible.builtin.stat:
+    path: "/home/{{ user }}/.local/share/JetBrains/Toolbox/bin/jetbrains-toolbox"
+  register: jetbrains_toolbox_installed
+
+- name: Install Toolbox
+  block:
+    - name: Download archive
+      ansible.builtin.get_url:
+          url: "https://download.jetbrains.com/toolbox/jetbrains-toolbox-{{ jetbrains_toolbox_version }}.tar.gz"
+          dest: /tmp/ansible/jetbrains-toolbox.tar.gz
+
+    - name: Unarchive
+      ansible.builtin.unarchive:
+        src: /tmp/ansible/jetbrains-toolbox.tar.gz
+        dest: /tmp/ansible/
+        creates: /tmp/ansible/jetbrains-toolbox/
+
+    - name: Find jetbrains-toolbox directory name
+      ansible.builtin.find:
+          paths: /tmp/ansible
+          recurse: yes
+          file_type: directory
+          patterns: jetbrains-toolbox*
+      register: jetbrains_toolbox_folder
+
+    - name: Execute jetbrains-toolbox
+      ansible.builtin.command: ./jetbrains-toolbox
+      args:
+          chdir: "{{ jetbrains_toolbox_folder.files[0].path }}"
+
+  when: jetbrains_toolbox_installed.stat.exists == False
+
+# VSCode
+- name: Check if code is installed
+  ansible.builtin.stat:
+      path: /usr/bin/code
+  register: code_installed
+
+- name: Install code if not installed
+  block:
+    - name: Import rpm key
+      ansible.builtin.rpm_key:
+        key: https://packages.microsoft.com/keys/microsoft.asc
+        state: present
+
+    - name: Add repo
+      ansible.builtin.yum_repository:
+        name: vscode
+        description: Visual Studio Code
+        baseurl: https://packages.microsoft.com/yumrepos/vscode
+        gpgcheck: yes
+        gpgkey: https://packages.microsoft.com/keys/microsoft.asc
+
+    - name: Install code
+      ansible.builtin.dnf:
+        name: code
+        state: present
+
+  when: not code_installed.stat.exists
+
+# Sublime text sublime-text
+
+- name: Check if sublime text is installed
+  ansible.builtin.stat:
+      path: /opt/sublime_text/sublime_text
+  register: subl_installed
+
+- name: Install sublime text if not installed
+  block:
+    - name: Download rpm package
+      ansible.builtin.get_url:
+          url: "https://download.sublimetext.com/sublime-text-{{ sublime_text_version }}-1.x86_64.rpm"
+          dest: "/tmp/ansible/sublime-text-{{ sublime_text_version }}-1.x86_64.rpm"
+
+    - name: Install sublime text
+      ansible.builtin.dnf:
+          name: "/tmp/ansible/sublime-text-{{ sublime_text_version }}-1.x86_64.rpm"
+          state: present
+          disable_gpg_check: true
+  when: not subl_installed.stat.exists
+
+# MSTeams https://packages.microsoft.com/yumrepos/ms-teams/
+
+- name: Check if teams is installed
+  ansible.builtin.stat:
+      path: /usr/bin/teams
+  register: teams_installed
+
+- name: Install teams if not installed
+  block:
+    - name: Import rpm key
+      ansible.builtin.rpm_key:
+        key: https://packages.microsoft.com/keys/microsoft.asc
+        state: present
+
+    - name: Add repo
+      ansible.builtin.yum_repository:
+        name: teams
+        description: Microsoft Teams
+        baseurl: https://packages.microsoft.com/yumrepos/ms-teams
+        gpgcheck: yes
+        gpgkey: https://packages.microsoft.com/keys/microsoft.asc
+
+    - name: Install teams
+      ansible.builtin.dnf:
+          name: teams
+          state: present
+  when: not teams_installed.stat.exists
+
+# Torguard
+
+- name: Check if torguard is installed
+  ansible.builtin.stat:
+      path: /opt/torguard/bin/torguard
+  register: torguard_installed
+
+- name: Install torguard if not installed
+  block:
+    - name: Download rpm package
+      ansible.builtin.get_url:
+          url: "https://torguard.net/downloads/new/torguard-latest-amd64.rpm"
+          dest: "/tmp/ansible/torguard-latest-amd64.rpm"
+
+    - name: Install torguard
+      ansible.builtin.dnf:
+          name: "/tmp/ansible/torguard-latest-amd64.rpm"
+          state: present
+          disable_gpg_check: true
+  when: not torguard_installed.stat.exists
+
+# Veracrypt https://www.veracrypt.fr/en/Downloads.html
+- name: Check if veracrypt is installed
+  ansible.builtin.stat:
+      path: /usr/bin/veracrypt
+  register: veracrypt_installed
+
+- name: Install veracrypt if not installed
+  block:
+    - name: Download rpm package
+      ansible.builtin.get_url:
+          url: "https://launchpad.net/veracrypt/trunk/{{ veracrypt_version }}/+download/veracrypt-{{ veracrypt_version }}-CentOS-8-x86_64.rpm"
+          dest: "/tmp/ansible/veracrypt-{{ veracrypt_version }}-CentOS-8-x86_64.rpm"
+
+    - name: Install veracrypt
+      ansible.builtin.dnf:
+          name: "/tmp/ansible/veracrypt-{{ veracrypt_version }}-CentOS-8-x86_64.rpm"
+          state: present
+          disable_gpg_check: true
+
+  when: not veracrypt_installed.stat.exists
+
+# VMWare Workstation
+- name: Check if vmware workstation is installed
+  ansible.builtin.stat:
+      path: /usr/bin/vmware
+  register: vmware_installed
+
+- name: Install vmware workstation if not installed
+  block:
+    - name: Download bundle
+      ansible.builtin.get_url:
+        url: "https://download3.vmware.com/software/WKST-{{ vmware_version_key }}-LX/VMware-Workstation-Full-{{ vmware_exact_version }}.x86_64.bundle"
+        dest: /tmp/ansible/vmware-workstation.bundle
+
+    - name: Make bundle executable
+      ansible.builtin.file:
+        path: /tmp/ansible/vmware-workstation.bundle
+        mode: 0755
+
+    - name: Execute bundle
+      ansible.builtin.command: ./vmware-workstation.bundle
+      args:
+          chdir: /tmp/ansible
+
+    # Resolving Conflict with kernel
+    - name: Install prerequisite
+      ansible.builtin.dnf:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - kernel-devel
+        - kernel-headers
+        - gcc
+        - gcc-c++
+        - make
+        - git
+
+    - name: Download host modules
+      ansible.builtin.get_url:
+        url: "https://github.com/mkubecek/vmware-host-modules/archive/workstation-{{ vmware_version }}.tar.gz"
+        dest: /tmp/ansible/vmware-host-modules.tar.gz
+
+    - name: Extract host modules
+      ansible.builtin.unarchive:
+        src: /tmp/ansible/vmware-host-modules.tar.gz
+        dest: /tmp/ansible
+
+    - name: Build host modules
+      ansible.builtin.command: make
+      args:
+        chdir: /tmp/ansible/vmware-host-modules-workstation-{{ vmware_version }}
+
+    - name: Install host modules
+      ansible.builtin.command: make install
+      args:
+        chdir: /tmp/ansible/vmware-host-modules-workstation-{{ vmware_version }}
+
+    - name: Create update script
+      ansible.builtin.copy:
+          content: |
+            #!/usr/bin/bash
+            export LANG=C
+            
+            COMMAND="$1"
+            KERNEL_VERSION="$2"
+            BOOT_DIR_ABS="$3"
+            KERNEL_IMAGE="$4"
+            
+            ret=0
+            
+            case "$COMMAND" in
+                add)
+                   VMWARE_VERSION=$(cat /etc/vmware/config | grep player.product.version | sed '/.*\"\(.*\)\".*/ s//\1/g')
+            
+                   [ -z VMWARE_VERSION ] && exit 0
+            
+                   mkdir -p /tmp/git; cd /tmp/git
+                   git clone -b workstation-${VMWARE_VERSION} https://github.com/mkubecek/vmware-host-modules.git
+                   cd vmware-host-modules
+                   make VM_UNAME=${KERNEL_VERSION}
+                   make install VM_UNAME=${KERNEL_VERSION}
+            
+                   ((ret+=$?))
+                   ;;
+                remove)
+                    exit 0
+                    ;;
+                *)
+                    usage
+                    ret=1;;
+            esac
+            
+            exit $ret
+          dest: /etc/kernel/install.d/99-vmmodules.sh
+          mode: 0755
+  when: not vmware_installed.stat.exists
+
+# Bitwarden
+- name: Check if bitwarden is installed
+  ansible.builtin.find:
+    paths: "/home/{{ user }}/Applications"
+    patterns: "Bitwarden*.AppImage"
+  register: bitwarden_installed
+
+- name: Install bitwarden if not installed
+  block:
+    - name: Download AppImage
+      ansible.builtin.get_url:
+        url: "https://vault.bitwarden.com/download/?app=desktop&platform=linux&variant=appimage"
+        dest: /tmp/ansible/
+
+    - name: Get AppImage name
+      ansible.builtin.find:
+        paths: /tmp/ansible/
+        patterns: "Bitwarden*.AppImage"
+      register: bitwarden_appimage
+
+    - name: Integrate AppImage
+      ansible.builtin.command: "ail-cli integrate {{ bitwarden_appimage.files[0].path }}"
+      args:
+        chdir: /tmp/ansible/
+      become: true
+      become_user: "{{ user }}"
+
+  when: bitwarden_installed.matched == 0

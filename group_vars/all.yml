@@ -82,3 +82,10 @@ flatpak_packages:
 snap_packages:
   - slack
   - zotero-snap
+
+jetbrains_toolbox_version: 1.27.2.13801
+sublime_text_version: 4126
+veracrypt_version: 1.25.9
+vmware_exact_version: 16.2.5-20904516
+vmware_version_key: 1625
+vmware_version: 16.2.5

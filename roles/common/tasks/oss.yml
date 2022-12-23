@@ -80,7 +80,6 @@
   when: dust_installed.stat.exists == False
 
 # difftastic https://github.com/Wilfred/difftastic
-
 - name: Check if brew is installed
   ansible.builtin.stat:
     path: /home/linuxbrew/.linuxbrew/bin/brew
@@ -105,7 +104,6 @@
   become_user: "{{ user }}"
 
 # git-split-diffs https://github.com/banga/git-split-diffs
-
 - name: Check if git-split-diffs is installed
   ansible.builtin.stat:
     path: /usr/local/bin/git-split-diffs
@@ -119,7 +117,6 @@
   ansible.builtin.command: git config --global core.pager "git-split-diffs --color | less -RFX"
 
 # autorandr https://github.com/phillipberndt/autorandr
-
 - name: Check if autorandr is installed
   ansible.builtin.stat:
     path: /usr/bin/autorandr
@@ -144,8 +141,165 @@
         state: absent
   when: not autorandr_installed.stat.exists
 
-# End
 
+# App image launcher https://github.com/TheAssassin/AppImageLauncher/releases/tag/v2.2.0
+- name: Check if appimage launcher is installed
+  ansible.builtin.stat:
+    path: /usr/bin/appimagelauncherd
+  register: appimage_launcher_installed
+
+- name: Install appimage launcher
+  block:
+    - name: Get release information
+      ansible.builtin.uri:
+          url: https://api.github.com/repos/TheAssassin/AppImageLauncher/releases/latest
+          return_content: yes
+          status_code: 200
+      register: appimage_launcher_release
+
+    - name: Download rpm file
+      ansible.builtin.get_url:
+          url: "{{ item.browser_download_url }}"
+          dest: /tmp/ansible/appimage-launcher.rpm
+      when: "'x86_64.rpm' in item.name"
+      loop: "{{ appimage_launcher_release.json.assets }}"
+
+    - name: Install appimage launcher
+      ansible.builtin.yum:
+        name: /tmp/ansible/appimage-launcher.rpm
+        state: present
+        disable_gpg_check: yes
+  when: not appimage_launcher_installed.stat.exists
+
+# Musikcube
+- name: Check if musikcube is installed
+  ansible.builtin.stat:
+    path: /usr/bin/musikcube
+  register: musikcube_installed
+
+- name: Install musikcube
+  block:
+    - name: Get GitHub release information
+      ansible.builtin.uri:
+          url: https://api.github.com/repos/clangen/musikcube/releases/latest
+          return_content: yes
+          status_code: 200
+      register: musikcube_release
+
+    - name: Download rpm
+      ansible.builtin.get_url:
+          url: "{{ item.browser_download_url }}"
+          dest: /tmp/ansible/musikcube.rpm
+      when: "'amd64.rpm' in item.name"
+      loop: "{{ musikcube_release.json.assets }}"
+
+    - name: Install musikcube
+      ansible.builtin.yum:
+        name: /tmp/ansible/musikcube.rpm
+        state: present
+        disable_gpg_check: yes
+
+  when: not musikcube_installed.stat.exists
+
+# Obsidian
+
+- name: Check if obsidian is installed
+  ansible.builtin.find:
+    paths: "/home/{{ user }}/Applications"
+    recurse: yes
+    patterns: "Obsidian*"
+  register: obsidian_installed
+
+- name: Install obsidian
+  block:
+    - name: Get latest obsidian release
+      ansible.builtin.uri:
+        url: https://api.github.com/repos/obsidianmd/obsidian-releases/releases/latest
+        return_content: yes
+        status_code: 200
+      register: obsidian_release
+
+    - name: Download linux binary
+      ansible.builtin.get_url:
+        url: "{{ item.browser_download_url }}"
+        dest: /tmp/ansible/
+      when: "'.AppImage' in item.name and 'arm64' not in item.name"
+      loop: "{{ obsidian_release.json.assets }}"
+
+    - name: Find obsidian file
+      ansible.builtin.find:
+        paths: /tmp/ansible
+        recurse: yes
+        patterns: "Obsidian*"
+      register: obsidian_file
+
+    - name: Integrate obsidian
+      ansible.builtin.command: "ail-cli integrate {{ obsidian_file.files[0].path }}"
+      become: yes
+      become_user: "{{ user }}"
+  when: obsidian_installed.files|length == 0
+
+# Logseq
+- name: Check if Logseq is installed
+  ansible.builtin.find:
+      paths: "/home/{{ user }}/Applications"
+      recurse: yes
+      patterns: "Logseq*"
+  register: logseq_installed
+
+- name: Install logseq
+  block:
+    - name: Get release information
+      ansible.builtin.uri:
+          url: https://api.github.com/repos/logseq/logseq/releases/latest
+          return_content: yes
+          status_code: 200
+      register: logseq_release
+
+    - name: Download linux binary
+      ansible.builtin.get_url:
+          url: "{{ item.browser_download_url }}"
+          dest: /tmp/ansible/
+      when: "'.AppImage' in item.name and 'x64' in item.name"
+      loop: "{{ logseq_release.json.assets }}"
+
+    - name: Find logseq file
+      ansible.builtin.find:
+        paths: /tmp/ansible
+        recurse: yes
+        patterns: "Logseq*"
+      register: logseq_file
+
+    - name: Integrate logseq
+      ansible.builtin.command: "ail-cli integrate {{ logseq_file.files[0].path }}"
+      become: yes
+      become_user: "{{ user }}"
+
+  when: logseq_installed.files|length == 0
+
+# Nerd fonts
+- name: Check if nerd fonts is installed
+  ansible.builtin.stat:
+    path: "/home/{{ user }}/.local/share/fonts/NerdFonts"
+  register: nerd_fonts_installed
+
+- name: Install nerd fonts
+  block:
+    - name: Clone nerd fonts repository
+      ansible.builtin.git:
+        repo: https://github.com/ryanoasis/nerd-fonts.git
+        dest: /tmp/ansible/nerd-fonts
+
+    - name : Install nerd fonts
+      ansible.builtin.command: ./install.sh
+      args:
+        chdir: /tmp/ansible/nerd-fonts
+      become: yes
+      become_user: "{{ user }}"
+
+  when: not nerd_fonts_installed.stat.exists
+
+# End
 - name: Remove temporary working directory
   ansible.builtin.file:
     path: /tmp/ansible

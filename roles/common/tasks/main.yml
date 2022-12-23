@@ -1,5 +1,5 @@
 ---
-
+#
 - name: Ensure that the system is up to date
   ansible.builtin.dnf:
     name: '*'
@@ -46,8 +46,9 @@
     state: present
   loop: "{{ snap_packages }}"
 
-- name: Install proprietary/non-packaged software
-  ansible.builtin.include_tasks: proprietary.yml
-
 - name: Install OSS software
   ansible.builtin.include_tasks: oss.yml
+
+
+- name: Install proprietary/non-packaged software
+  ansible.builtin.include_tasks: proprietary.yml
