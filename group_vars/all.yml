@@ -74,6 +74,10 @@ dnf_packages:
   - gtk4-devel
   - glib2-devel
   - nodejs
+  - neovim
+  - python3-neovim
+#   $ sudo dnf install gcc-c++ cmake make git gmp-devel procps-ng-devel boost-devel openssl-devel python3-markdown
+
 
 flatpak_packages:
   - org.signal.Signal
