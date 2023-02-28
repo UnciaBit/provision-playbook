@@ -76,6 +76,7 @@ dnf_packages:
   - nodejs
   - neovim
   - python3-neovim
+  - alacritty
 #   $ sudo dnf install gcc-c++ cmake make git gmp-devel procps-ng-devel boost-devel openssl-devel python3-markdown
 
 

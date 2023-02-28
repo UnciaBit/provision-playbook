@@ -92,6 +92,7 @@
       ansible.builtin.dnf:
           name: "/tmp/ansible/sublime-text-{{ sublime_text_version }}-1.x86_64.rpm"
           state: present
+          allow_downgrade: true
           disable_gpg_check: true
   when: not subl_installed.stat.exists
 
@@ -289,3 +290,8 @@
       become_user: "{{ user }}"
 
   when: bitwarden_installed.matched == 0
+
+
+# Zoom
+
+# Calibre

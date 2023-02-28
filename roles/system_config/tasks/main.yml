@@ -7,13 +7,12 @@
     line: "{{ user }} ALL=(ALL) NOPASSWD: ALL"
   when: sudo_nopassword
 
-- name: Copy pulseaudio .pa template
-  ansible.builtin.template:
-    src: pulse_default.pa.j2
-    dest: /etc/pulse/default.pa
-    owner: root
-    group: root
-    mode: 0644
+- name: Add line in /etc/pulse/default.pa
+  ansible.builtin.lineinfile:
+    path: /etc/pulse/default.pa
+    state: present
+    line: "load-module module-switch-on-connect"
+
 
 #- name: Get dotfile
 #  ansible.builtin.git:
@@ -27,3 +26,9 @@
 #    owner: "{{ user }}"
 #    group: "{{ user }}"
 #    mode: 0644
+
+
+# Fstab cusotm location + uid=1000,gid=1000 for user
+# Transfer /etc/X11/xorg.conf.d/* files
+
+# ibus japanese input

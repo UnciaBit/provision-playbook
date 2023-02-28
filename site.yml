@@ -5,7 +5,7 @@
   become: true
   become_method: sudo
   roles:
-#    - common
+    - common
 #    - nvidia_optimus
     - system_config
   environment:

@@ -304,3 +304,5 @@
   ansible.builtin.file:
     path: /tmp/ansible
     state: absent
+
+# Librewolf
